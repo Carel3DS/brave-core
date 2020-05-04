@@ -9,9 +9,7 @@
 #define BUILDFLAG_INTERNAL_USE_GOOGLE_UPDATE_INTEGRATION() (1)
 #endif
 
-#define Google BraveSoftware
-#include "../../../../chrome/install_static/install_modes.cc"
-#undef Google
+#include "../../../../chrome/browser/active_use_util.cc"
 
 #if defined(OFFICIAL_BUILD)
 #undef BUILDFLAG_INTERNAL_USE_GOOGLE_UPDATE_INTEGRATION
