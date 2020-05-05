@@ -3,12 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_LOCALE_HELPER_H_
-#define BAT_ADS_INTERNAL_LOCALE_HELPER_H_
+#ifndef BRAVE_COMPONENTS_L10N_COMMON_LOCALE_H_
+#define BRAVE_COMPONENTS_L10N_COMMON_LOCALE_H_
 
 #include <string>
 
-namespace helper {
+namespace brave_l10n {
+
+const char kDefaultLanguage[] = "en";
+const char kDefaultRegion[] = "US";
 
 class Locale {
  public:
@@ -18,6 +21,6 @@ class Locale {
       const std::string& locale);
 };
 
-}  // namespace helper
+}  // namespace brave_l10n
 
-#endif  // BAT_ADS_INTERNAL_LOCALE_HELPER_H_
+#endif  // BRAVE_COMPONENTS_L10N_COMMON_LOCALE_H_

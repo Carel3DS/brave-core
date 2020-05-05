@@ -6,13 +6,12 @@
 #include <algorithm>
 #include <vector>
 
-#include "bat/ads/internal/locale_helper.h"
-#include "bat/ads/internal/static_values.h"
+#include "brave/components/l10n/common/locale.h"
 
 #include "base/strings/string_util.h"
 #include "base/strings/string_split.h"
 
-namespace helper {
+namespace brave_l10n {
 
 std::string Locale::GetLanguageCode(
     const std::string& locale) {
@@ -20,7 +19,7 @@ std::string Locale::GetLanguageCode(
       ".", base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
 
   if (locale_components.size() == 0) {
-    return ads::kDefaultLanguage;
+    return kDefaultLanguage;
   }
 
   std::string normalized_locale = locale_components.front();
@@ -30,7 +29,7 @@ std::string Locale::GetLanguageCode(
       normalized_locale, "_", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
 
   if (components.size() == 0) {
-    return ads::kDefaultLanguage;
+    return kDefaultLanguage;
   }
 
   const std::string language_code = components.front();
@@ -44,7 +43,7 @@ std::string Locale::GetRegionCode(
       ".", base::KEEP_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
 
   if (locale_components.size() == 0) {
-    return ads::kDefaultRegion;
+    return kDefaultRegion;
   }
 
   std::string normalized_locale = locale_components.front();
@@ -54,7 +53,7 @@ std::string Locale::GetRegionCode(
       normalized_locale, "_", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
 
   if (components.size() <= 1) {
-    return ads::kDefaultRegion;
+    return kDefaultRegion;
   }
 
   const std::string region_code = components.back();
@@ -62,4 +61,4 @@ std::string Locale::GetRegionCode(
   return base::ToUpperASCII(region_code);
 }
 
-}  // namespace helper
+}  // namespace brave_l10n

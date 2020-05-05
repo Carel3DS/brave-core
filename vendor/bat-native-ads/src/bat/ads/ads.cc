@@ -9,8 +9,9 @@
 #include "bat/ads/ads.h"
 
 #include "bat/ads/internal/ads_impl.h"
-#include "bat/ads/internal/locale_helper.h"
 #include "bat/ads/internal/supported_regions.h"
+
+#include "brave/components/l10n/common/locale.h"
 
 namespace ads {
 
@@ -66,7 +67,7 @@ bool Ads::IsNewlySupportedLocale(
 
 std::string Ads::GetRegion(
     const std::string& locale) {
-  return helper::Locale::GetRegionCode(locale);
+  return brave_l10n::Locale::GetRegionCode(locale);
 }
 
 }  // namespace ads
