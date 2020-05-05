@@ -47,12 +47,6 @@ pipeline {
 @NonCPS
 def stopCurrentBuild() {
     Jenkins.instance.getItemByFullName(JOB_NAME).getLastBuild().doStop()
-    sleep(time: 1, unit: "MINUTES")
-}
-
-@NonCPS
-def isStartedManually() {
-    return Jenkins.instance.getItemByFullName(JOB_NAME).getLastBuild().getCause(hudson.model.Cause$UpstreamCause) == null
 }
 
 @NonCPS
@@ -68,47 +62,35 @@ def setEnv() {
     DISABLE_SCCACHE = params.DISABLE_SCCACHE
     SKIP_SIGNING = params.SKIP_SIGNING
     DCHECK_ALWAYS_ON = params.DCHECK_ALWAYS_ON
-    RUN_NETWORK_AUDIT = false
-    SKIP = false
-    SKIP_ANDROID = false
-    SKIP_IOS = false
-    SKIP_LINUX = false
-    SKIP_MACOS = false
-    SKIP_WINDOWS = false
-    BASE_BRANCH = "master"
-    BRAVE_BROWSER_BRANCH = "master"
-    BRAVE_CORE_BRANCH = BRANCH_NAME
     GITHUB_API = "https://api.github.com/repos/brave"
-    if (CHANGE_BRANCH) {
-        BASE_BRANCH = CHANGE_TARGET
-        BRAVE_BROWSER_BRANCH = CHANGE_TARGET
-        BRAVE_CORE_BRANCH = CHANGE_BRANCH
-        def braveCorePrDetails = readJSON(text: httpRequest(url: GITHUB_API + "/brave-core/pulls?head=brave:" + BRAVE_CORE_BRANCH, customHeaders: [[name: "Authorization", value: "token ${PR_BUILDER_TOKEN}"]]).content)[0]
-        SKIP = braveCorePrDetails.mergeable_state.equals("draft") || braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip") }.equals(1)
-        SKIP_ANDROID = braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-android") }.equals(1)
-        SKIP_IOS = braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-ios") }.equals(1)
-        SKIP_LINUX = braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-linux") }.equals(1)
-        SKIP_MACOS = braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-macos") }.equals(1)
-        SKIP_WINDOWS = braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-windows") }.equals(1)
-        RUN_NETWORK_AUDIT = braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/run-network-audit") }.equals(1)
-        SLACK_USERNAME = readJSON(text: SLACK_USERNAME_MAP)[braveCorePrDetails.user.login]
-        BRANCH_PRODUCTIVITY_HOMEPAGE = "https://github.com/brave/brave-core/pull/${braveCorePrDetails.number}"
-        BRANCH_PRODUCTIVITY_NAME = "Brave Core PR #${braveCorePrDetails.number}"
-        BRANCH_PRODUCTIVITY_DESCRIPTION = braveCorePrDetails.title
-        BRANCH_PRODUCTIVITY_USER = braveCorePrDetails.user.login
-        def branchExistsInBraveBrowser = httpRequest(url: GITHUB_API + "/brave-browser/branches/" + BRAVE_CORE_BRANCH, validResponseCodes: "100:499", customHeaders: [[name: "Authorization", value: "token ${PR_BUILDER_TOKEN}"]]).status.equals(200)
-        if (branchExistsInBraveBrowser) {
-            BRAVE_BROWSER_BRANCH = BRAVE_CORE_BRANCH
-            def braveBrowserPrDetails = readJSON(text: httpRequest(url: GITHUB_API + "/brave-browser/pulls?head=brave:" + BRAVE_BROWSER_BRANCH, customHeaders: [[name: "Authorization", value: "token ${PR_BUILDER_TOKEN}"]]).content)[0]
-            if (braveBrowserPrDetails) {
-                SKIP = SKIP || braveBrowserPrDetails.mergeable_state.equals("draft") || braveCorePrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip") }.equals(1)
-                SKIP_ANDROID = SKIP_ANDROID || braveBrowserPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-android") }.equals(1)
-                SKIP_IOS = SKIP_IOS || braveBrowserPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-ios") }.equals(1)
-                SKIP_LINUX = SKIP_LINUX || braveBrowserPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-linux") }.equals(1)
-                SKIP_MACOS = SKIP_MACOS || braveBrowserPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-macos") }.equals(1)
-                SKIP_WINDOWS = SKIP_WINDOWS || braveBrowserPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-windows") }.equals(1)
-                RUN_NETWORK_AUDIT = RUN_NETWORK_AUDIT || braveBrowserPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/run-network-audit") }.equals(1)
-            }
+    BASE_BRANCH = CHANGE_TARGET
+    OTHER_REPO_BRANCH = CHANGE_TARGET
+    REPO_BRANCH = CHANGE_BRANCH
+    def prDetails = readJSON(text: httpRequest(url: GITHUB_API + "/brave-core/pulls?head=brave:" + REPO_BRANCH, customHeaders: [[name: "Authorization", value: "token ${PR_BUILDER_TOKEN}"]]).content)[0]
+    SKIP = prDetails.draft.equals(true) || prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip") }.equals(1)
+    SKIP_ANDROID = prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-android") }.equals(1)
+    SKIP_IOS = prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-ios") }.equals(1)
+    SKIP_LINUX = prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-linux") }.equals(1)
+    SKIP_MACOS = prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-macos") }.equals(1)
+    SKIP_WINDOWS = prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-windows") }.equals(1)
+    RUN_NETWORK_AUDIT = prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/run-network-audit") }.equals(1)
+    SLACK_USERNAME = readJSON(text: SLACK_USERNAME_MAP)[prDetails.user.login]
+    BRANCH_PRODUCTIVITY_HOMEPAGE = "https://github.com/brave/brave-core/pull/${prDetails.number}"
+    BRANCH_PRODUCTIVITY_NAME = "Brave Core PR #${prDetails.number}"
+    BRANCH_PRODUCTIVITY_DESCRIPTION = prDetails.title
+    BRANCH_PRODUCTIVITY_USER = prDetails.user.login
+    def branchExistsInOtherRepo = httpRequest(url: GITHUB_API + "/brave-browser/branches/" + REPO_BRANCH, validResponseCodes: "100:499", customHeaders: [[name: "Authorization", value: "token ${PR_BUILDER_TOKEN}"]]).status.equals(200)
+    if (branchExistsInOtherRepo) {
+        OTHER_REPO_BRANCH = REPO_BRANCH
+        def otherPrDetails = readJSON(text: httpRequest(url: GITHUB_API + "/brave-browser/pulls?head=brave:" + OTHER_REPO_BRANCH, customHeaders: [[name: "Authorization", value: "token ${PR_BUILDER_TOKEN}"]]).content)[0]
+        if (otherPrDetails) {
+            SKIP = SKIP || otherPrDetails.draft.equals(true) || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip") }.equals(1)
+            SKIP_ANDROID = SKIP_ANDROID || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-android") }.equals(1)
+            SKIP_IOS = SKIP_IOS || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-ios") }.equals(1)
+            SKIP_LINUX = SKIP_LINUX || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-linux") }.equals(1)
+            SKIP_MACOS = SKIP_MACOS || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-macos") }.equals(1)
+            SKIP_WINDOWS = SKIP_WINDOWS || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-windows") }.equals(1)
+            RUN_NETWORK_AUDIT = RUN_NETWORK_AUDIT || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/run-network-audit") }.equals(1)
         }
     }
 }
@@ -129,7 +111,7 @@ def checkAndAbortBuild() {
 }
 
 def startBraveBrowserBuild() {
-    PIPELINE_NAME = "pr-brave-browser-" + BRAVE_CORE_BRANCH.replace('/', '-')
+    PIPELINE_NAME = "pr-brave-browser-" + REPO_BRANCH.replace('/', '-')
     jobDsl(scriptText: """
         pipelineJob("${PIPELINE_NAME}") {
             // this list has to match the parameters in the Jenkinsfile from devops repo
@@ -188,8 +170,8 @@ def startBraveBrowserBuild() {
         booleanParam(name: "SKIP_LINUX", value: SKIP_LINUX),
         booleanParam(name: "SKIP_MACOS", value: SKIP_MACOS),
         booleanParam(name: "SKIP_WINDOWS", value: SKIP_WINDOWS),
-        string(name: "BRAVE_BROWSER_BRANCH", value: BRAVE_BROWSER_BRANCH),
-        string(name: "BRAVE_CORE_BRANCH", value: BRAVE_CORE_BRANCH),
+        string(name: "BRAVE_BROWSER_BRANCH", value: OTHER_REPO_BRANCH),
+        string(name: "BRAVE_CORE_BRANCH", value: REPO_BRANCH),
         string(name: "BASE_BRANCH", value: BASE_BRANCH),
         string(name: "SLACK_USERNAME", value: SLACK_USERNAME),
         string(name: "SLACK_BUILDS_CHANNEL", value: '#build-downloads-bot'),
