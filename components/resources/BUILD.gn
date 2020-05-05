@@ -97,3 +97,8 @@ grit("strings") {
   output_dir = "$root_gen_dir/components"
   resource_ids = "//brave/browser/resources/resource_ids"
 }
+
+action("about_credits") {
+  script = "//brave/script/generate_licenses.py"
+  outputs = [ "$root_gen_dir/non_existent_file" ]
+}
