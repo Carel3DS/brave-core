@@ -1522,10 +1522,9 @@ void RewardsDOMHandler::OnFetchBalance(
     base::DictionaryValue data;
     data.SetIntKey("status", result);
     base::Value balance_value(base::Value::Type::DICTIONARY);
+    balance_value.SetDoubleKey("total", balance->total);
 
     if (result == 0 && balance) {
-      balance_value.SetDoubleKey("total", balance->total);
-
       base::Value rates(base::Value::Type::DICTIONARY);
       for (auto const& rate : balance->rates) {
         rates.SetDoubleKey(rate.first, rate.second);
@@ -1537,10 +1536,9 @@ void RewardsDOMHandler::OnFetchBalance(
         wallets.SetDoubleKey(wallet.first, wallet.second);
       }
       balance_value.SetKey("wallets", std::move(wallets));
-
-      data.SetKey("balance", std::move(balance_value));
     }
 
+    data.SetKey("balance", std::move(balance_value));
     web_ui()->CallJavascriptFunctionUnsafe("brave_rewards.balance", data);
   }
 }
